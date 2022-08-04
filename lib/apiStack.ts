@@ -1,11 +1,4 @@
-import {
-	CfnOutput,
-	Duration,
-	Expiration,
-	RemovalPolicy,
-	Stack,
-	StackProps,
-} from 'aws-cdk-lib'
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib'
 import { Table } from 'aws-cdk-lib/aws-dynamodb'
 import { Construct } from 'constructs'
 import * as path from 'path'
@@ -23,7 +16,9 @@ import { IRole } from 'aws-cdk-lib/aws-iam'
 
 interface APIStackProps extends StackProps {
 	userpool: UserPool
-	sampleTable: Table
+	roomTable: Table
+	userTable: Table
+	messageTable: Table
 	unauthenticatedRole: IRole
 }
 
@@ -31,9 +26,9 @@ export class APIStack extends Stack {
 	constructor(scope: Construct, id: string, props: APIStackProps) {
 		super(scope, id, props)
 
-		const api = new GraphqlApi(this, 'SampleTodoProject', {
-			name: 'SampleTodoProject',
-			schema: Schema.fromAsset(path.join(__dirname, 'schema.graphql')),
+		const api = new GraphqlApi(this, 'ChatApp', {
+			name: 'ChatApp',
+			schema: Schema.fromAsset(path.join(__dirname, 'graphql/schema.graphql')),
 			authorizationConfig: {
 				defaultAuthorization: {
 					authorizationType: AuthorizationType.USER_POOL,
@@ -41,16 +36,6 @@ export class APIStack extends Stack {
 						userPool: props.userpool,
 					},
 				},
-				additionalAuthorizationModes: [
-					{
-						authorizationType: AuthorizationType.API_KEY,
-						apiKeyConfig: {
-							description: 'A sample API key',
-							expires: Expiration.after(Duration.days(30)),
-						},
-					},
-					{ authorizationType: AuthorizationType.IAM },
-				],
 			},
 			logConfig: {
 				fieldLogLevel: FieldLogLevel.ALL,
@@ -58,35 +43,73 @@ export class APIStack extends Stack {
 			xrayEnabled: true,
 		})
 
-		api
-			.addDynamoDbDataSource('SampleTodoDataSource', props.sampleTable)
-			.createResolver({
-				typeName: 'Query',
-				fieldName: 'getSampleTodo',
-				requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
-				responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-			})
+		const roomTableDataSource = api.addDynamoDbDataSource(
+			'RoomTableDataSource',
+			props.roomTable
+		)
+		const messageTableDataSource = api.addDynamoDbDataSource(
+			'MessageTableDataSource',
+			props.messageTable
+		)
+
+		roomTableDataSource.createResolver({
+			typeName: 'Mutation',
+			fieldName: 'createRoom',
+			requestMappingTemplate: MappingTemplate.fromFile(
+				path.join(
+					__dirname,
+					'graphql/mappingTemplates/Mutation.createRoom.req.vtl'
+				)
+			),
+			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+		})
+
+		roomTableDataSource.createResolver({
+			typeName: 'Query',
+			fieldName: 'listRooms',
+			// Can't use MappingTemplate.dynamoDbScanTable() because it's too basic for our needs👇🏽
+			// https://github.com/aws/aws-cdk/blob/5e4d48e2ff12a86c0fb0177fe7080990cf79dbd0/packages/%40aws-cdk/aws-appsync/lib/mapping-template.ts#L39
+			requestMappingTemplate: MappingTemplate.fromFile(
+				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.req.vtl')
+			),
+			responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
+		})
+
+		messageTableDataSource.createResolver({
+			typeName: 'Mutation',
+			fieldName: 'createMessage',
+			requestMappingTemplate: MappingTemplate.fromFile(
+				path.join(
+					__dirname,
+					'graphql/mappingTemplates/Mutation.createMessage.req.vtl'
+				)
+			),
+			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+		})
+		messageTableDataSource.createResolver({
+			typeName: 'Query',
+			fieldName: 'listMessagesForRoom',
+			requestMappingTemplate: MappingTemplate.fromFile(
+				path.join(
+					__dirname,
+					'graphql/mappingTemplates/Query.listMessagesForRoom.req.vtl'
+				)
+			),
+			responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
+		})
+
+		// todo: lookup appsync resolver tutorial on atomic updates and double check vtl versions. Do this before deploying and testing. ETA left: 2 hours and then writing the page.
+		// messageTableDataSource.createResolver({
+		// 	typeName: 'Mutation',
+		// 	fieldName: 'updateMessage', 👈🏽 will update the updatedAt field and return everthing else
+		// 	requestMappingTemplate: MappingTemplate.fromFile(
+		// 		path.join(__dirname, 'graphql/mappingTemplates/Mutation.createMessage.req.vtl')
+		// 	),
+		// 	responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+		// })
 
 		api
-			.addDynamoDbDataSource('SampleTodoDataSourceAPIKey', props.sampleTable)
-			.createResolver({
-				typeName: 'Query',
-				fieldName: 'getSampleTodoPublic',
-				requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
-				responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-			})
-
-		api
-			.addDynamoDbDataSource('SampleTodoDataSourceIAM', props.sampleTable)
-			.createResolver({
-				typeName: 'Query',
-				fieldName: 'getSampleTodoIAM',
-				requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
-				responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-			})
-
-		api
-			.addDynamoDbDataSource('SampleTodoDataSource', props.sampleTable)
+			.addDynamoDbDataSource('SampleTodoDataSource', props.roomTable)
 			.createResolver({
 				typeName: 'Mutation',
 				fieldName: 'createSampleTodo',
@@ -96,8 +119,6 @@ export class APIStack extends Stack {
 				),
 				responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
 			})
-
-		api.grantQuery(props.unauthenticatedRole, 'getSampleTodoIAM')
 
 		new CfnOutput(this, 'GraphQLAPIURL', {
 			value: api.graphqlUrl,

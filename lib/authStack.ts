@@ -4,6 +4,7 @@ import {
 	CfnUserPoolGroup,
 	UserPool,
 	UserPoolClient,
+	UserPoolOperation,
 	VerificationEmailStyle,
 } from 'aws-cdk-lib/aws-cognito'
 import { Construct } from 'constructs'
@@ -12,6 +13,9 @@ import {
 	UserPoolAuthenticationProvider,
 } from '@aws-cdk/aws-cognito-identitypool-alpha'
 import { IRole } from 'aws-cdk-lib/aws-iam'
+import { Code, IFunction, Runtime, Function } from 'aws-cdk-lib/aws-lambda'
+import * as path from 'path'
+import { Table } from 'aws-cdk-lib/aws-dynamodb'
 
 interface AuthStackProps extends StackProps {
 	readonly stage: string
@@ -19,6 +23,7 @@ interface AuthStackProps extends StackProps {
 	readonly hasCognitoGroups: boolean
 	readonly groupNames?: string[]
 	readonly identitypoolConstructName: string
+	readonly userTable: Table
 }
 
 export class AuthStack extends Stack {
@@ -26,6 +31,7 @@ export class AuthStack extends Stack {
 	public readonly authenticatedRole: IRole
 	public readonly unauthenticatedRole: IRole
 	public readonly userpool: UserPool
+
 	constructor(scope: Construct, id: string, props: AuthStackProps) {
 		super(scope, id, props)
 
@@ -45,6 +51,22 @@ export class AuthStack extends Stack {
 				},
 			},
 		})
+
+		const addUserFunc = new Function(this, 'postConfirmTriggerFunc', {
+			runtime: Runtime.NODEJS_16_X,
+			handler: 'index.main',
+			code: Code.fromAsset(
+				path.join(__dirname, 'functions/postConfirmTrigger')
+			),
+			environment: {
+				TABLENAME: props.userTable.tableName,
+			},
+		})
+
+		addUserFunc.node.addDependency(userPool)
+		props.userTable.grantWriteData(addUserFunc)
+
+		userPool.addTrigger(UserPoolOperation.POST_CONFIRMATION, addUserFunc)
 
 		if (props.hasCognitoGroups) {
 			props.groupNames?.forEach(
@@ -85,15 +107,17 @@ export class AuthStack extends Stack {
 		this.authenticatedRole = identityPool.authenticatedRole
 		this.unauthenticatedRole = identityPool.unauthenticatedRole
 		this.userpool = userPool
+
+		this.identityPoolId = new CfnOutput(this, 'IdentityPoolId', {
+			value: identityPool.identityPoolId,
+		})
+
 		new CfnOutput(this, 'UserPoolId', {
 			value: userPool.userPoolId,
 		})
 
 		new CfnOutput(this, 'UserPoolClientId', {
 			value: userPoolClient.userPoolClientId,
-		})
-		this.identityPoolId = new CfnOutput(this, 'IdentityPoolId', {
-			value: identityPool.identityPoolId,
 		})
 	}
 }

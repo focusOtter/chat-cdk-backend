@@ -8,12 +8,15 @@ import { APIStack } from '../lib/apiStack'
 
 const app = new cdk.App()
 
+const databaseStack = new DatabaseStack(app, 'DatabaseStack', {})
+
 const authStack = new AuthStack(app, 'AuthStack', {
 	stage: 'dev',
 	hasCognitoGroups: true,
 	groupNames: ['admin'],
 	userpoolConstructName: 'AmplifySampleUserPool',
 	identitypoolConstructName: 'AmplifySampleIdentityPool',
+	userTable: databaseStack.userTable,
 })
 
 const fileStorageStack = new FileStorageStack(app, 'FileStorageStack', {
@@ -22,10 +25,10 @@ const fileStorageStack = new FileStorageStack(app, 'FileStorageStack', {
 	allowedOrigins: ['http://localhost:3000'],
 })
 
-const databaseStack = new DatabaseStack(app, 'DatabaseStack', {})
-
 const apiStack = new APIStack(app, 'AppSyncAPIStack', {
 	userpool: authStack.userpool,
-	sampleTable: databaseStack.sampleTable,
+	roomTable: databaseStack.roomTable,
+	messageTable: databaseStack.messageTable,
+	userTable: databaseStack.userTable,
 	unauthenticatedRole: authStack.unauthenticatedRole,
 })
