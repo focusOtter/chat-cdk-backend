@@ -1,4 +1,4 @@
-# Fullstack CDK Helpers
+# CDK Chat Backend
 
 This project helps developers create common AWS services that are useful in creating fullstack applications. Backend services are deployed as separate CDK stacks and export the necessary outputs needed for your frontend projects.
 
