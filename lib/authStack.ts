@@ -62,7 +62,7 @@ export class AuthStack extends Stack {
 
 		const addUserFunc = new Function(this, 'postConfirmTriggerFunc', {
 			runtime: Runtime.NODEJS_16_X,
-			handler: 'index.main',
+			handler: 'addUserToDB.main',
 			code: Code.fromAsset(
 				path.join(__dirname, 'functions/postConfirmTrigger')
 			),
