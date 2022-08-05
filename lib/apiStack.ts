@@ -98,15 +98,17 @@ export class APIStack extends Stack {
 			responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
 		})
 
-		// todo: lookup appsync resolver tutorial on atomic updates and double check vtl versions. Do this before deploying and testing. ETA left: 2 hours and then writing the page.
-		// messageTableDataSource.createResolver({
-		// 	typeName: 'Mutation',
-		// 	fieldName: 'updateMessage', 👈🏽 will update the updatedAt field and return everthing else
-		// 	requestMappingTemplate: MappingTemplate.fromFile(
-		// 		path.join(__dirname, 'graphql/mappingTemplates/Mutation.createMessage.req.vtl')
-		// 	),
-		// 	responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-		// })
+		messageTableDataSource.createResolver({
+			typeName: 'Mutation',
+			fieldName: 'updateMessage',
+			requestMappingTemplate: MappingTemplate.fromFile(
+				path.join(
+					__dirname,
+					'graphql/mappingTemplates/Mutation.updateMessage.req.vtl'
+				)
+			),
+			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+		})
 
 		api
 			.addDynamoDbDataSource('SampleTodoDataSource', props.roomTable)

@@ -49,6 +49,14 @@ export class AuthStack extends Stack {
 					required: true,
 					mutable: true,
 				},
+				givenName: {
+					required: true,
+					mutable: true,
+				},
+				familyName: {
+					required: true,
+					mutable: true,
+				},
 			},
 		})
 

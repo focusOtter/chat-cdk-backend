@@ -8,6 +8,7 @@ type Query {
 
 type Mutation {
 	createMessage(input: MessageInput!): Message
+	updatedMessage(input: MessageInput!): Message
 	createRoom(input: RoomInput!): Room
 }
 
@@ -49,7 +50,7 @@ type Message {
 	owner: String!
 	createdAt: AWSDateTime!
 	updatedAt: AWSDateTime!
-	roomId: String!
+	roomId: ID!
 }
 
 type MessageContent {
@@ -59,7 +60,7 @@ type MessageContent {
 
 input MessageInput {
 	content: MessageContentInput!
-	roomId: ID
+	roomId: ID!
 }
 
 input MessageContentInput {
