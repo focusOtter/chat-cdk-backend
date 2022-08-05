@@ -110,18 +110,6 @@ export class APIStack extends Stack {
 			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
 		})
 
-		api
-			.addDynamoDbDataSource('SampleTodoDataSource', props.roomTable)
-			.createResolver({
-				typeName: 'Mutation',
-				fieldName: 'createSampleTodo',
-				requestMappingTemplate: MappingTemplate.dynamoDbPutItem(
-					PrimaryKey.partition('id').auto(),
-					Values.projecting('input')
-				),
-				responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-			})
-
 		new CfnOutput(this, 'GraphQLAPIURL', {
 			value: api.graphqlUrl,
 		})

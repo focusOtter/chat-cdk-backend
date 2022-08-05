@@ -14,8 +14,8 @@ const authStack = new AuthStack(app, 'AuthStack', {
 	stage: 'dev',
 	hasCognitoGroups: true,
 	groupNames: ['admin'],
-	userpoolConstructName: 'AmplifySampleUserPool',
-	identitypoolConstructName: 'AmplifySampleIdentityPool',
+	userpoolConstructName: 'ChatUserPool',
+	identitypoolConstructName: 'ChatIdentityPool',
 	userTable: databaseStack.userTable,
 })
 
