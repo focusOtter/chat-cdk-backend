@@ -8,7 +8,7 @@ type Query {
 
 type Mutation {
 	createMessage(input: MessageInput!): Message
-	updatedMessage(input: MessageInput!): Message
+	updateMessage(input: MessageInput!): Message
 	createRoom(input: RoomInput!): Room
 }
 
@@ -16,6 +16,8 @@ type Subscription {
 	onCreateRoom: Room @aws_subscribe(mutations: ["createRoom"])
 	onCreateMessageByRoomId(roomId: ID): Message
 		@aws_subscribe(mutations: ["createMessage"])
+	onUpdateMessage(roomId: ID): Message
+		@aws_subscribe(mutations: ["updateMessage"])
 }
 
 type RoomConnection {
