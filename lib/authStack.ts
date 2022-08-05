@@ -35,6 +35,17 @@ export class AuthStack extends Stack {
 	constructor(scope: Construct, id: string, props: AuthStackProps) {
 		super(scope, id, props)
 
+		const addUserFunc = new Function(this, 'postConfirmTriggerFunc', {
+			runtime: Runtime.NODEJS_16_X,
+			handler: 'addUserToDB.main',
+			code: Code.fromAsset(
+				path.join(__dirname, 'functions/postConfirmTrigger')
+			),
+			environment: {
+				TABLENAME: props.userTable.tableName,
+			},
+		})
+
 		const userPool = new UserPool(this, `${props.userpoolConstructName}`, {
 			selfSignUpEnabled: true,
 			accountRecovery: AccountRecovery.PHONE_AND_EMAIL,
@@ -58,23 +69,12 @@ export class AuthStack extends Stack {
 					mutable: true,
 				},
 			},
-		})
-
-		const addUserFunc = new Function(this, 'postConfirmTriggerFunc', {
-			runtime: Runtime.NODEJS_16_X,
-			handler: 'addUserToDB.main',
-			code: Code.fromAsset(
-				path.join(__dirname, 'functions/postConfirmTrigger')
-			),
-			environment: {
-				TABLENAME: props.userTable.tableName,
+			lambdaTriggers: {
+				postConfirmation: addUserFunc,
 			},
 		})
 
-		addUserFunc.node.addDependency(userPool)
 		props.userTable.grantWriteData(addUserFunc)
-
-		userPool.addTrigger(UserPoolOperation.POST_CONFIRMATION, addUserFunc)
 
 		if (props.hasCognitoGroups) {
 			props.groupNames?.forEach(
