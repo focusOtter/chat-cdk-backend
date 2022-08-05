@@ -125,9 +125,6 @@ export class APIStack extends Stack {
 		new CfnOutput(this, 'GraphQLAPIURL', {
 			value: api.graphqlUrl,
 		})
-		new CfnOutput(this, 'GraphQLAPIKey', {
-			value: api.apiKey as string,
-		})
 
 		new CfnOutput(this, 'GraphQLAPIID', {
 			value: api.apiId,
