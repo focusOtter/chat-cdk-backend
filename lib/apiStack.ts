@@ -68,7 +68,7 @@ export class APIStack extends Stack {
 			typeName: 'Query',
 			fieldName: 'listRooms',
 			// Can't use MappingTemplate.dynamoDbScanTable() because it's too basic for our needs👇🏽
-			// https://github.com/aws/aws-cdk/blob/5e4d48e2ff12a86c0fb0177fe7080990cf79dbd0/packages/%40aws-cdk/aws-appsync/lib/mapping-template.ts#L39
+			// https://github.com/aws/aws-cdk/blob/5e4d48e2ff12a86c0fb0177fe7080990cf79dbd0/packages/%40aws-cdk/aws-appsync/lib/mapping-template.ts#L39. I should PR this to take in an optional limit and scan 🤔
 			requestMappingTemplate: MappingTemplate.fromFile(
 				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.req.vtl')
 			),
