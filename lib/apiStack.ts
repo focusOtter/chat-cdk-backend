@@ -8,8 +8,6 @@ import {
 	AuthorizationType,
 	FieldLogLevel,
 	MappingTemplate,
-	PrimaryKey,
-	Values,
 } from '@aws-cdk/aws-appsync-alpha'
 import { UserPool } from 'aws-cdk-lib/aws-cognito'
 import { IRole } from 'aws-cdk-lib/aws-iam'
@@ -72,7 +70,9 @@ export class APIStack extends Stack {
 			requestMappingTemplate: MappingTemplate.fromFile(
 				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.req.vtl')
 			),
-			responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
+			responseMappingTemplate: MappingTemplate.fromFile(
+				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.res.vtl')
+			),
 		})
 
 		messageTableDataSource.createResolver({
@@ -95,7 +95,12 @@ export class APIStack extends Stack {
 					'graphql/mappingTemplates/Query.listMessagesForRoom.req.vtl'
 				)
 			),
-			responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
+			responseMappingTemplate: MappingTemplate.fromFile(
+				path.join(
+					__dirname,
+					'graphql/mappingTemplates/Query.listMessagesForRoom.res.vtl'
+				)
+			),
 		})
 
 		messageTableDataSource.createResolver({

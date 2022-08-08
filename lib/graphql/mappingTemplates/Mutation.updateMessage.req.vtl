@@ -1,9 +1,9 @@
 {
   "version" : "2018-05-29",
   "operation" : "UpdateItem",
-  "key": $util.dynamodb.toDynamoDBJson($ctx.args.input.id),
+  "key": {"id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id)},
   "update" : {
-      "expression" : "#updatedAt = :updatedAt AND #content = :content",
+      "expression" : "SET #updatedAt = :updatedAt, #content = :content",
       "expressionNames" : {
           "#updatedAt" : "updatedAt",
           "#content": "content"

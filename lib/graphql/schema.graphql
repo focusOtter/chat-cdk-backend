@@ -63,6 +63,7 @@ type MessageContent {
 input MessageInput {
 	content: MessageContentInput!
 	roomId: ID!
+	id: ID
 }
 
 input MessageContentInput {
