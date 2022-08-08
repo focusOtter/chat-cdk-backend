@@ -1,4 +1,10 @@
-import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib'
+import {
+	CfnOutput,
+	Expiration,
+	RemovalPolicy,
+	Stack,
+	StackProps,
+} from 'aws-cdk-lib'
 import {
 	AccountRecovery,
 	CfnUserPoolGroup,
@@ -48,6 +54,7 @@ export class AuthStack extends Stack {
 
 		const userPool = new UserPool(this, `${props.userpoolConstructName}`, {
 			selfSignUpEnabled: true,
+			removalPolicy: RemovalPolicy.DESTROY,
 			accountRecovery: AccountRecovery.PHONE_AND_EMAIL,
 			userVerification: {
 				emailStyle: VerificationEmailStyle.CODE,
