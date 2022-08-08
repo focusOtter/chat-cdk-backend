@@ -30,14 +30,15 @@ export class FileStorageStack extends Stack {
 			],
 		})
 
-		fileStorageBucket.addToResourcePolicy(
-			new iam.PolicyStatement({
-				effect: iam.Effect.ALLOW,
-				actions: ['s3:GetObject'],
-				principals: [new iam.AnyPrincipal()],
-				resources: [`arn:aws:s3:::${fileStorageBucket.bucketName}/public/*`],
-			})
-		)
+		// allow guests read access to the bucket.
+		// fileStorageBucket.addToResourcePolicy(
+		// 	new iam.PolicyStatement({
+		// 		effect: iam.Effect.ALLOW,
+		// 		actions: ['s3:GetObject'],
+		// 		principals: [new iam.AnyPrincipal()],
+		// 		resources: [`arn:aws:s3:::${fileStorageBucket.bucketName}/public/*`],
+		// 	})
+		// )
 
 		const mangedPolicyForAmplifyUnauth = new iam.ManagedPolicy(
 			this,
